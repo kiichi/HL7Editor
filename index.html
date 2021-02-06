@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>ACE in Action</title>
+	<style type="text/css" media="screen">
+		#editor {
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="editor">MSH|^~\&|EPIC|EPICADT|SMS|SMSADT|199912271408|CHARRIS|ADT^A04|1817457|D|2.5|
+PID||0493575^^^2^ID 1|454721||DOE^JOHN^^^^|DOE^JOHN^^^^|19480203|M||B|254 MYSTREET
+AVE^^MYTOWN^OH^44123^USA||(216)123-4567|||M|NON|400003403~1129086|
+NK1||ROE^MARIE^^^^|SPO||(216)123-4567||EC|||||||||||||||||||||||||||
+PV1||O|168 ~219~C~PMA^^^^^^^^^||||277^ALLEN MYLASTNAME^BONNIE^^^^||||||||||
+||2688684|||||||||||||||||||||||||199912271408||||||002376853</div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"
+		integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q=="
+		crossorigin="anonymous"></script>
+	<script>
+
+		// HL7 Message Format:
+		// | – element delimiter.
+		// ^ – component delimiter.
+		// & – Sub-component delimiter.
+		// ~ – Used to separate repeating fields.
+		// \ – Escape character.
+
+		define("HL7HighlightRules", [], function (require, exports, module) {
+			"use strict";
+
+			var oop = require("ace/lib/oop");
+			var TextHighlightRules = require("ace/mode/text_highlight_rules").TextHighlightRules;
+
+			var HL7HighlightRules = function () {
+				this.setKeywords = function (kwMap) {
+					this.keywordRule.onMatch = this.createKeywordMapper(kwMap, "identifier")
+				}
+				this.keywordRule = {
+					regex: "\\w+",
+					onMatch: function () { return "text" }
+				}
+
+				this.$rules = {
+					"start": [
+						{
+							token: "keyword.control.transition.hl7delimiters",
+							regex: /\||\^|&|~|\\/
+						},
+						this.keywordRule
+					]
+				};
+				this.normalizeRules()
+			};
+
+			oop.inherits(HL7HighlightRules, TextHighlightRules);
+
+			exports.HL7HighlightRules = HL7HighlightRules;
+
+		});
+
+		var editor = ace.edit("editor");
+		//editor.setTheme("ace/theme/chrome");
+		var TextMode = require("ace/mode/text").Mode;
+		var hl7Mode = new TextMode();
+		hl7Mode.HighlightRules = require("HL7HighlightRules").HL7HighlightRules;
+		//editor.session.setMode("ace/mode/hl7");
+		editor.session.setMode(hl7Mode);
+	</script>
+</body>
+
+</html>
